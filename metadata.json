@@ -1,0 +1,6 @@
+{
+  "name": "The Complete Ethical Hacker: Zero to Professional by Chrishem",
+  "description": "A hands-on, publication-grade interactive e-book and offensive security training suite by Chrishem. Featuring real-world labs, virtual terminal simulator, cheat sheets, and AI mentor.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,260 @@
+[
+  {
+    "slug": "lab-setup-kali-parrot",
+    "title": "Setting Up Your Hacking Lab: Kali vs Parrot vs BlackArch",
+    "module": "Module 1: Lab Architecture",
+    "part": 1,
+    "order": 1,
+    "video_url": "https://www.youtube.com/watch?v=_iLm-m-sDn8",
+    "lab_image": "hackforge/metasploitable2",
+    "is_pro": false,
+    "content_md": "> ⚠️ Authorized training environment only — never test systems you don't own or have written permission to test.\n\n## Why It Matters\nOffensive security requires absolute separation between your daily computing environment and the weaponized toolsets you operate. Running raw exploit code, packet injectors, and reverse shells on your primary host OS invites accidental leakage, credential poisoning, and potential legal exposure. An isolated virtualization sandbox guarantees repeatability: when a broken library corrupts your Python environment, reverting to a pristine snapshot takes five seconds instead of four hours of reinstallation.\n\n## Theory\nOffensive distributions differ fundamentally in architecture, stability, and resource requirements:\n- **Kali Linux (Debian Testing):** The undisputed industry benchmark maintained by Offensive Security. Receives cutting-edge tool updates and boasts 95% compatibility with commercial certification exams (OSCP, eJPT). Memory footprint: ~1.2 GB idle.\n- **Parrot Security OS (Debian Stable):** Engineered with privacy and daily-driver usability in mind. Ships preconfigured with Anonsurf (system-wide Tor proxying) and uses the MATE desktop environment, consuming ~650 MB idle.\n- **BlackArch (Arch Linux):** Contains over 2,800 security tools. High maintenance curve, prone to rolling-release dependency conflicts, best suited for Arch purists.\n\n### Virtual Networking Models\n- **Host-Only (vboxnet0):** Attacker and target VMs communicate across a private software switch. No packets escape to your local home/office Wi-Fi. **Mandatory for vulnerable VMs.**\n- **NAT / NAT Network:** Attacker VM accesses the internet for package installations while remaining reachable by target VMs on the internal subnet.\n- **Bridged:** Attacker VM obtains an IP directly from your physical router. Dangerous for vulnerable VMs like Metasploitable.\n\n## Tool Walkthrough with Real Runnable Commands\n\n### 1. Verify CPU Hardware Virtualization\n```bash\negrep -c '(vmx|svm)' /proc/cpuinfo\n```\n*Sample Output:*\n```text\n8\n```\n*(A count greater than 0 confirms Intel VT-x or AMD-V is active in BIOS).* \n\n### 2. Configure Host-Only Subnet and Locate Targets\n```bash\nsudo fping -agq 192.168.56.0/24\n```\n*Sample Output:*\n```text\n192.168.56.1\n192.168.56.101 (Kali)\n192.168.56.102 (Metasploitable2)\n```\n\n### 3. Rapid Port Verification via Netcat\n```bash\nnc -zv 192.168.56.102 21 22 80\n```\n*Sample Output:*\n```text\nConnection to 192.168.56.102 21 port [tcp/ftp] succeeded!\nConnection to 192.168.56.102 22 port [tcp/ssh] succeeded!\nConnection to 192.168.56.102 80 port [tcp/http] succeeded!\n```\n\n## Step-by-Step Lab\n1. Launch your sandbox terminal.\n2. Execute `fping -agq 192.168.56.0/24` to discover the live IP of the vulnerable target container.\n3. Run `nc -zv 192.168.56.102 21` to verify FTP accessibility.\n4. Take a virtual machine baseline snapshot labeled `Baseline_Clean`.\n\n## Common Mistakes\n- **Deploying Metasploitable on Bridged Mode:** Exposes a severely vulnerable box with default root accounts to your entire local network.\n- **Forgetting Guest Additions:** Causes display resolution issues and disables shared clipboards between host and VM.\n- **Running apt upgrade on Kali without taking a snapshot:** Bleeding-edge packages occasionally break Python virtualenvs.\n\n## Defensive Perspective\nFrom a Blue Team and SOC standpoint, scanning an isolated network segment leaves immediate telemetry in switch ARP tables and local firewall logs. Segmenting developer sandboxes into dedicated VLANs with zero route access to corporate active directory domains is mandatory under ISO 27001.\n\n## Homework\n1. Download and unpack `/usr/share/wordlists/rockyou.txt.gz` using `sudo gzip -d`.\n2. Write a 5-line bash loop that pings a range of 10 IP addresses and echoes which are online.\n\n```quiz\n[\n  {\n    \"question\": \"Which virtualization network mode guarantees vulnerable targets cannot send traffic to the physical home network?\",\n    \"options\": [\"Bridged\", \"Host-Only\", \"NAT\", \"Promiscuous\"],\n    \"answer\": 1,\n    \"explanation\": \"Host-Only networking restricts communication strictly between the host and assigned virtual machines.\"\n  },\n  {\n    \"question\": \"What is the primary risk of running Metasploitable 2 in Bridged adapter mode?\",\n    \"options\": [\"It consumes excessive RAM\", \"It exposes critical unpatched vulnerabilities to your entire physical local network\", \"It blocks SSH connections\", \"It wipes the host disk\"],\n    \"answer\": 1,\n    \"explanation\": \"Bridged adapter puts the vulnerable target directly onto your physical subnet with default credentials.\"\n  },\n  {\n    \"question\": \"What does a return value greater than 0 from egrep -c '(vmx|svm)' /proc/cpuinfo signify?\",\n    \"options\": [\"Disk corruption\", \"Hardware virtualization is enabled in CPU\", \"The Linux kernel is 32-bit\", \"Root privileges are disabled\"],\n    \"answer\": 1,\n    \"explanation\": \"VMX (Intel) and SVM (AMD) CPU flags denote hardware-assisted virtualization support.\"\n  },\n  {\n    \"question\": \"Which desktop environment is default on modern Kali Linux releases?\",\n    \"options\": [\"GNOME 40\", \"KDE Plasma\", \"XFCE\", \"MATE\"],\n    \"answer\": 2,\n    \"explanation\": \"Offensive Security chose XFCE as the default desktop due to its lightweight resource profile.\"\n  },\n  {\n    \"question\": \"When should you take a Virtual Machine Snapshot?\",\n    \"options\": [\"Never\", \"Only after your disk is full\", \"Immediately after base setup and before executing untested exploits\", \"After running a DDoS tool\"],\n    \"answer\": 2,\n    \"explanation\": \"Snapshots enable instant recovery whenever tool installations or payload tests break operating system state.\"\n  }\n]\n```",
+    "quiz": [
+      {
+        "question": "Which virtualization network mode guarantees vulnerable targets cannot send traffic to the physical home network?",
+        "options": ["Bridged", "Host-Only", "NAT", "Promiscuous"],
+        "answer": 1,
+        "explanation": "Host-Only networking restricts communication strictly between the host and assigned virtual machines."
+      },
+      {
+        "question": "What is the primary risk of running Metasploitable 2 in Bridged adapter mode?",
+        "options": ["It consumes excessive RAM", "It exposes critical unpatched vulnerabilities to your entire physical local network", "It blocks SSH connections", "It wipes the host disk"],
+        "answer": 1,
+        "explanation": "Bridged adapter puts the vulnerable target directly onto your physical subnet with default credentials."
+      },
+      {
+        "question": "What does a return value greater than 0 from egrep -c '(vmx|svm)' /proc/cpuinfo signify?",
+        "options": ["Disk corruption", "Hardware virtualization is enabled in CPU", "The Linux kernel is 32-bit", "Root privileges are disabled"],
+        "answer": 1,
+        "explanation": "VMX (Intel) and SVM (AMD) CPU flags denote hardware-assisted virtualization support."
+      },
+      {
+        "question": "Which desktop environment is default on modern Kali Linux releases?",
+        "options": ["GNOME 40", "KDE Plasma", "XFCE", "MATE"],
+        "answer": 2,
+        "explanation": "Offensive Security chose XFCE as the default desktop due to its lightweight resource profile."
+      },
+      {
+        "question": "When should you take a Virtual Machine Snapshot?",
+        "options": ["Never", "Only after your disk is full", "Immediately after base setup and before executing untested exploits", "After running a DDoS tool"],
+        "answer": 2,
+        "explanation": "Snapshots enable instant recovery whenever tool installations or payload tests break operating system state."
+      }
+    ]
+  },
+  {
+    "slug": "linux-mastery-for-hackers",
+    "title": "Linux Mastery: Permissions, SUID Bypasses & Tmux",
+    "module": "Module 2: Linux Mastery",
+    "part": 1,
+    "order": 2,
+    "video_url": "https://www.youtube.com/watch?v=hxXbvu9J5Pg",
+    "lab_image": "hackforge/metasploitable2",
+    "is_pro": false,
+    "content_md": "> ⚠️ Authorized training environment only — never test systems you don't own or have written permission to test.\n\n## Why It Matters\nOver 80% of enterprise web servers and 95% of container workloads run on Linux. If you cannot navigate terminal permissions, manipulate file descriptors, and inspect SUID bits without a graphical interface, you will be unable to conduct professional penetration tests or escalate privileges post-exploitation.\n\n## Theory\nLinux permissions revolve around User, Group, and Others across Read (4), Write (2), and Execute (1). Special bits modify execution behavior:\n- **SUID (Set User ID = 4000):** When an executable with SUID set is run, it executes with the permissions of the file owner (frequently root) rather than the calling user.\n- **SGID (Set Group ID = 2000):** Executes with group permissions or enforces inherited group ownership on created subfiles.\n- **Sticky Bit (1000):** Prevents non-owners from deleting files in world-writable shared directories like `/tmp`.\n\n## Tool Walkthrough with Real Runnable Commands\n\n### 1. Hunting SUID Binaries\n```bash\nfind / -perm -u=s -type f 2>/dev/null\n```\n*Sample Output:*\n```text\n/usr/bin/sudo\n/usr/bin/passwd\n/tmp/rootbash\n```\n\n### 2. Inspecting Cron Jobs for Insecure Automation\n```bash\ncat /etc/crontab\nls -la /etc/cron.d/\n```\n\n### 3. Persistent Shell Sessions with Tmux\n```bash\ntmux new -s hackforge_session\n# Detach: Ctrl+B then D\n# Reattach:\ntmux attach -t hackforge_session\n```\n\n## Step-by-Step Lab\n1. In your lab terminal, search for SUID binaries using `find / -perm -4000 -type f 2>/dev/null`.\n2. Locate the `/tmp/rootbash` binary.\n3. Execute `/tmp/rootbash -p` to maintain elevated effective UID.\n4. Type `id` and confirm `euid=0(root)`.\n\n## Common Mistakes\n- Omitting `2>/dev/null` on find commands, flooding the terminal with permission denied errors.\n- Forgetting `-p` when invoking SUID bash, causing bash to drop effective root privileges back to the standard user.\n\n## Defensive Perspective\nAudit all non-standard SUID binaries using tools like `auditd` and mount `/tmp` and `/dev/shm` with `nosuid,noexec` flags in `/etc/fstab`.\n\n## Homework\n1. Solve levels 0 through 10 on OverTheWire Bandit.\n2. Write a bash one-liner that finds all world-writable files in `/var/log`.\n\n```quiz\n[\n  {\n    \"question\": \"What octal value represents the SUID permission bit?\",\n    \"options\": [\"1000\", \"2000\", \"4000\", \"7777\"],\n    \"answer\": 2,\n    \"explanation\": \"4000 represents SUID, 2000 represents SGID, and 1000 represents Sticky Bit.\"\n  },\n  {\n    \"question\": \"Why must you pass '-p' when executing a SUID copy of /bin/bash?\",\n    \"options\": [\"To enable password mode\", \"To prevent bash from dropping effective root privileges\", \"To run in the background\", \"To encrypt process memory\"],\n    \"answer\": 1,\n    \"explanation\": \"Modern bash detects when UID != EUID and resets EUID to UID unless the -p (privileged) switch is specified.\"\n  },\n  {\n    \"question\": \"Which directory is universally readable and writable on standard Linux systems, making it a prime location to drop exploit staging scripts?\",\n    \"options\": [\"/etc/security\", \"/root\", \"/tmp\", \"/boot\"],\n    \"answer\": 2,\n    \"explanation\": \"/tmp is world-writable (often with sticky bit) allowing unprivileged users to create temporary files.\"\n  },\n  {\n    \"question\": \"In tmux, what is the default keyboard shortcut prefix?\",\n    \"options\": [\"Ctrl+A\", \"Ctrl+B\", \"Ctrl+C\", \"Alt+X\"],\n    \"answer\": 1,\n    \"explanation\": \"Ctrl+B is the default prefix for all tmux multiplexer shortcuts.\"\n  },\n  {\n    \"question\": \"Which file contains the salted password hashes for local user accounts?\",\n    \"options\": [\"/etc/passwd\", \"/etc/hosts\", \"/etc/shadow\", \"/var/log/auth.log\"],\n    \"answer\": 2,\n    \"explanation\": \"/etc/shadow stores the cryptographic password hashes and is only readable by root.\"\n  }\n]\n```",
+    "quiz": [
+      {
+        "question": "What octal value represents the SUID permission bit?",
+        "options": ["1000", "2000", "4000", "7777"],
+        "answer": 2,
+        "explanation": "4000 represents SUID, 2000 represents SGID, and 1000 represents Sticky Bit."
+      },
+      {
+        "question": "Why must you pass '-p' when executing a SUID copy of /bin/bash?",
+        "options": ["To enable password mode", "To prevent bash from dropping effective root privileges", "To run in the background", "To encrypt process memory"],
+        "answer": 1,
+        "explanation": "Modern bash detects when UID != EUID and resets EUID to UID unless the -p (privileged) switch is specified."
+      },
+      {
+        "question": "Which directory is universally readable and writable on standard Linux systems, making it a prime location to drop exploit staging scripts?",
+        "options": ["/etc/security", "/root", "/tmp", "/boot"],
+        "answer": 2,
+        "explanation": "/tmp is world-writable (often with sticky bit) allowing unprivileged users to create temporary files."
+      },
+      {
+        "question": "In tmux, what is the default keyboard shortcut prefix?",
+        "options": ["Ctrl+A", "Ctrl+B", "Ctrl+C", "Alt+X"],
+        "answer": 1,
+        "explanation": "Ctrl+B is the default prefix for all tmux multiplexer shortcuts."
+      },
+      {
+        "question": "Which file contains the salted password hashes for local user accounts?",
+        "options": ["/etc/passwd", "/etc/hosts", "/etc/shadow", "/var/log/auth.log"],
+        "answer": 2,
+        "explanation": "/etc/shadow stores the cryptographic password hashes and is only readable by root."
+      }
+    ]
+  },
+  {
+    "slug": "nmap-scanning-enumeration",
+    "title": "Nmap Deep Dive: Scanning Flags, NSE Scripts & Timing",
+    "module": "Module 7: Scanning & Enumeration",
+    "part": 2,
+    "order": 7,
+    "video_url": "https://www.youtube.com/watch?v=hxXbvu9J5Pg",
+    "lab_image": "hackforge/metasploitable2",
+    "is_pro": false,
+    "content_md": "> ⚠️ Authorized training environment only — never test systems you don't own or have written permission to test.\n\n## Why It Matters\nPort scanning is the foundational bridge between passive intelligence gathering and active exploitation. If your scan misses a listening port, you miss the attack vector entirely. Elite penetration testers understand the precise TCP flags exchanged during SYN, ACK, and Connect scans to avoid tripping Intrusion Detection Systems (IDS) while gathering accurate service version banners.\n\n## Theory\nNmap operates across multiple scan techniques:\n- **SYN Stealth Scan (`-sS`):** Sends a TCP SYN. If the target returns SYN-ACK, Nmap immediately sends an RST to abort the handshake before the application socket creates an active connection log. Requires root privileges.\n- **TCP Connect Scan (`-sT`):** Completes the full 3-Way Handshake via `connect()` system call. Leaves application logs but runs without root.\n- **UDP Scan (`-sU`):** Essential for finding DNS (53), SNMP (161), and NTP (123). Slow because closed UDP ports return ICMP port unreachable.\n\n### Timing Templates\n- `-T0` (Paranoid) to `-T1` (Sneaky): Slow scans designed to bypass serial rate-limiting.\n- `-T4` (Aggressive): Recommended for reliable local networks and lab environments.\n- `-T5` (Insane): Sacrifices accuracy for extreme speed on high-bandwidth links.\n\n## Tool Walkthrough with Real Runnable Commands\n\n### 1. Comprehensive Service & Script Scan\n```bash\nsudo nmap -sC -sV -p- -T4 -oA target_full 192.168.56.102\n```\n*Sample Output:*\n```text\nPORT    STATE SERVICE     VERSION\n21/tcp  open  ftp         vsftpd 2.3.4\n22/tcp  open  ssh         OpenSSH 4.7p1 Debian 8ubuntu1\n80/tcp  open  http        Apache httpd 2.2.8 ((Ubuntu) DAV/2)\n445/tcp open  netbios-ssn Samba smbd 3.0.20-Debian\n```\n\n### 2. Targeting Specific Vulnerability Scripts (NSE)\n```bash\nsudo nmap -p 21,80,445 --script vuln 192.168.56.102\n```\n\n## Step-by-Step Lab\n1. In your lab terminal, execute `nmap -sC -sV 192.168.56.102`.\n2. Observe the open FTP port running vsftpd 2.3.4.\n3. Execute `nmap --script vuln -p 21 192.168.56.102` to confirm CVE-2011-2523 vulnerability presence.\n\n## Common Mistakes\n- Forgetting `-p-` and only scanning the default top 1,000 ports, missing administrative ports on 8080 or 8443.\n- Scanning external firewalled networks with `-T5`, causing packet drops and false negative results.\n\n## Defensive Perspective\nConfigure network firewalls to drop unsolicited SYN packets silently, implement port knocking or IP whitelisting for management ports, and alert on rapid multi-port connection requests via Snort or Suricata.\n\n## Homework\n1. Write a custom bash script that parses Grepable Nmap output (`.gnmap`) to extract a clean comma-separated list of open ports.\n2. Research the difference between `-Pn` (skip host discovery) and `-sn` (ping sweep only).\n\n```quiz\n[\n  {\n    \"question\": \"Why does an Nmap SYN Stealth Scan (-sS) send a TCP RST packet after receiving a SYN-ACK?\",\n    \"options\": [\"To crash the target server\", \"To tear down the connection before the application creates an active session log\", \"To download the web page\", \"To bypass DNS resolution\"],\n    \"answer\": 1,\n    \"explanation\": \"Sending an RST aborts the 3-way handshake, avoiding full connection establishment and standard application logging.\"\n  },\n  {\n    \"question\": \"Which Nmap flag instructs the scanner to test all 65,535 TCP ports?\",\n    \"options\": [\"-p 1000\", \"-p-\", \"-A\", \"-sV\"],\n    \"answer\": 1,\n    \"explanation\": \"-p- is the shorthand equivalent to -p 1-65535.\"\n  },\n  {\n    \"question\": \"What does the -sC flag do in an Nmap command?\",\n    \"options\": [\"Runs default Nmap Scripting Engine (NSE) scripts\", \"Encrypts the scan traffic with SSL\", \"Scans Cisco routers only\", \"Limits bandwidth to 100kbps\"],\n    \"answer\": 0,\n    \"explanation\": \"-sC is equivalent to --script=default, running safe enumeration and fingerprinting scripts.\"\n  },\n  {\n    \"question\": \"Which output flag creates normal, XML, and grepable scan logs simultaneously?\",\n    \"options\": [\"-oN\", \"-oX\", \"-oA <basename>\", \"-oG\"],\n    \"answer\": 2,\n    \"explanation\": \"-oA outputs the results in all three primary formats.\"\n  },\n  {\n    \"question\": \"When should you use the -Pn flag?\",\n    \"options\": [\"When the target blocks ICMP echo pings but has open TCP ports\", \"When scanning Bluetooth devices\", \"When you want to perform a UDP-only scan\", \"To scan without root permissions\"],\n    \"answer\": 0,\n    \"explanation\": \"-Pn treats all target hosts as alive, bypassing the ICMP host discovery probe.\"\n  }\n]\n```",
+    "quiz": [
+      {
+        "question": "Why does an Nmap SYN Stealth Scan (-sS) send a TCP RST packet after receiving a SYN-ACK?",
+        "options": ["To crash the target server", "To tear down the connection before the application creates an active session log", "To download the web page", "To bypass DNS resolution"],
+        "answer": 1,
+        "explanation": "Sending an RST aborts the 3-way handshake, avoiding full connection establishment and standard application logging."
+      },
+      {
+        "question": "Which Nmap flag instructs the scanner to test all 65,535 TCP ports?",
+        "options": ["-p 1000", "-p-", "-A", "-sV"],
+        "answer": 1,
+        "explanation": "-p- is the shorthand equivalent to -p 1-65535."
+      },
+      {
+        "question": "What does the -sC flag do in an Nmap command?",
+        "options": ["Runs default Nmap Scripting Engine (NSE) scripts", "Encrypts the scan traffic with SSL", "Scans Cisco routers only", "Limits bandwidth to 100kbps"],
+        "answer": 0,
+        "explanation": "-sC is equivalent to --script=default, running safe enumeration and fingerprinting scripts."
+      },
+      {
+        "question": "Which output flag creates normal, XML, and grepable scan logs simultaneously?",
+        "options": ["-oN", "-oX", "-oA <basename>", "-oG"],
+        "answer": 2,
+        "explanation": "-oA outputs the results in all three primary formats."
+      },
+      {
+        "question": "When should you use the -Pn flag?",
+        "options": ["When the target blocks ICMP echo pings but has open TCP ports", "When scanning Bluetooth devices", "When you want to perform a UDP-only scan", "To scan without root permissions"],
+        "answer": 0,
+        "explanation": "-Pn treats all target hosts as alive, bypassing the ICMP host discovery probe."
+      }
+    ]
+  },
+  {
+    "slug": "web-hacking-sqli",
+    "title": "Web Application Hacking: SQL Injection & sqlmap",
+    "module": "Module 11: Web Application Hacking",
+    "part": 2,
+    "order": 11,
+    "video_url": "https://portswigger.net/web-security",
+    "lab_image": "hackforge/dvwa",
+    "is_pro": false,
+    "content_md": "> ⚠️ Authorized training environment only — never test systems you don't own or have written permission to test.\n\n## Why It Matters\nSQL Injection (SQLi) remains one of the highest-bounty vulnerability classes on HackerOne and Bugcrowd. A single unsanitized database query can allow an unauthenticated remote attacker to bypass login forms, dump customer credit card numbers, modify database records, or write web shells directly to the host filesystem via `INTO OUTFILE`.\n\n## Theory\nSQL Injection occurs when user-supplied input is directly concatenated into a dynamic SQL query string instead of being treated as isolated parameter values.\n\n### Primary Injection Types\n1. **In-Band / Classic SQLi:**\n   - **Error-Based:** Induces database errors that echo table names or database versions directly into HTML.\n   - **UNION-Based:** Appends results from an attacker-crafted `UNION SELECT` query to the application's legitimate query output.\n2. **Inferential / Blind SQLi:**\n   - **Boolean Blind:** The application does not return data or errors, but changes its response based on true/false conditions.\n   - **Time-Based Blind:** Injects sleep payloads (e.g., `pg_sleep(5)` or `WAITFOR DELAY '0:0:5'`) to verify injection via server response latency.\n3. **Out-of-Band (OOB):** Triggers DNS or SMB requests from the database server to an attacker collaborator instance.\n\n## Tool Walkthrough with Real Runnable Commands\n\n### 1. Manual Auth Bypass Payload\n```sql\n' OR 1=1 -- -\nadmin' --\n```\n\n### 2. Automated SQLi Testing with sqlmap\n```bash\nsqlmap -u \"http://192.168.56.102/dvwa/vulnerabilities/sqli/?id=1&Submit=Submit\" \\\n  --cookie=\"security=low; PHPSESSID=session_here\" \\\n  --batch \\\n  --dbs\n```\n*Sample Output:*\n```text\n[+] available databases [2]:\n[*] dvwa\n[*] information_schema\n```\n\n### 3. Dumping Tables and Hashes\n```bash\nsqlmap -u \"http://192.168.56.102/dvwa/vulnerabilities/sqli/?id=1&Submit=Submit\" \\\n  --cookie=\"security=low; PHPSESSID=session_here\" \\\n  -D dvwa -T users --dump\n```\n\n## Step-by-Step Lab\n1. Open your lab terminal.\n2. Verify the DVWA web server response on `http://192.168.56.102`.\n3. Run the automated sqlmap command against the `/dvwa/vulnerabilities/sqli/` endpoint.\n4. Dump the `users` table and extract the admin MD5 hash.\n\n## Common Mistakes\n- Forgetting to pass the authenticated session cookie (`--cookie`), causing sqlmap to test the public login redirect instead of the vulnerable endpoint.\n- Not escaping special characters in URLs when testing via bash, causing the shell to interpret `&` as background process commands.\n\n## Defensive Perspective\nThe single infallible defense against SQL Injection is **Parameterized Queries (Prepared Statements)**. When using prepared statements, the database engine compiles the SQL query structure prior to binding parameter values, ensuring user input is forever treated as literal data, never executable syntax.\n\n## Homework\n1. Complete the PortSwigger Web Security Academy SQL Injection Apprentice and Practitioner labs.\n2. Write a Python script using `requests` that automates Boolean time-based blind SQLi character extraction.\n\n```quiz\n[\n  {\n    \"question\": \"What is the most secure and definitive remediation for SQL Injection vulnerabilities?\",\n    \"options\": [\"Blacklisting single quotes using regular expressions\", \"Using Parameterized Queries (Prepared Statements)\", \"Converting all database fields to integers\", \"Using a Web Application Firewall only\"],\n    \"answer\": 1,\n    \"explanation\": \"Parameterized queries ensure user input is never interpreted as executable SQL syntax by the database compiler.\"\n  },\n  {\n    \"question\": \"Which SQL comment sequence works reliably across MySQL, PostgreSQL, and SQLite?\",\n    \"options\": [\"//\", \"/* comment */\", \"-- -\", \"#\"],\n    \"answer\": 2,\n    \"explanation\": \"-- - (dash dash space) is standard SQL comment syntax that safely comments out remaining backend query code.\"\n  },\n  {\n    \"question\": \"In a UNION-based SQL injection, what must match between the original query and the injected query?\",\n    \"options\": [\"Table names\", \"Number and compatible data types of returned columns\", \"Database passwords\", \"Server IP addresses\"],\n    \"answer\": 1,\n    \"explanation\": \"UNION operators require both SELECT statements to return the exact same number of columns with matching or compatible data types.\"\n  },\n  {\n    \"question\": \"Which sqlmap switch automatically accepts default answers to interactive prompts?\",\n    \"options\": [\"--force\", \"--batch\", \"--yes\", \"--quiet\"],\n    \"answer\": 1,\n    \"explanation\": \"--batch runs sqlmap in non-interactive mode using default answers.\"\n  },\n  {\n    \"question\": \"What does a Time-Based Blind SQL injection rely on to exfiltrate data?\",\n    \"options\": [\"Database error messages in HTML\", \"Server response delay triggered by conditional sleep commands\", \"Email alerts sent to the attacker\", \"CPU overheating\"],\n    \"answer\": 1,\n    \"explanation\": \"Time-based blind SQLi uses conditional delay functions (e.g. sleep) to deduce true or false statements one byte at a time.\"\n  }\n]\n```",
+    "quiz": [
+      {
+        "question": "What is the most secure and definitive remediation for SQL Injection vulnerabilities?",
+        "options": ["Blacklisting single quotes using regular expressions", "Using Parameterized Queries (Prepared Statements)", "Converting all database fields to integers", "Using a Web Application Firewall only"],
+        "answer": 1,
+        "explanation": "Parameterized queries ensure user input is never interpreted as executable SQL syntax by the database compiler."
+      },
+      {
+        "question": "Which SQL comment sequence works reliably across MySQL, PostgreSQL, and SQLite?",
+        "options": ["//", "/* comment */", "-- -", "#"],
+        "answer": 2,
+        "explanation": "-- - (dash dash space) is standard SQL comment syntax that safely comments out remaining backend query code."
+      },
+      {
+        "question": "In a UNION-based SQL injection, what must match between the original query and the injected query?",
+        "options": ["Table names", "Number and compatible data types of returned columns", "Database passwords", "Server IP addresses"],
+        "answer": 1,
+        "explanation": "UNION operators require both SELECT statements to return the exact same number of columns with matching or compatible data types."
+      },
+      {
+        "question": "Which sqlmap switch automatically accepts default answers to interactive prompts?",
+        "options": ["--force", "--batch", "--yes", "--quiet"],
+        "answer": 1,
+        "explanation": "--batch runs sqlmap in non-interactive mode using default answers."
+      },
+      {
+        "question": "What does a Time-Based Blind SQL injection rely on to exfiltrate data?",
+        "options": ["Database error messages in HTML", "Server response delay triggered by conditional sleep commands", "Email alerts sent to the attacker", "CPU overheating"],
+        "answer": 1,
+        "explanation": "Time-based blind SQLi uses conditional delay functions (e.g. sleep) to deduce true or false statements one byte at a time."
+      }
+    ]
+  },
+  {
+    "slug": "active-directory-kerberoasting",
+    "title": "Active Directory Attacks: Kerberoasting & BloodHound",
+    "module": "Module 17: Active Directory Attacks",
+    "part": 3,
+    "order": 17,
+    "video_url": "https://www.youtube.com/watch?v=hxXbvu9J5Pg",
+    "lab_image": "hackforge/metasploitable2",
+    "is_pro": true,
+    "content_md": "> ⚠️ Authorized training environment only — never test systems you don't own or have written permission to test.\n\n## Why It Matters\nMicrosoft Active Directory governs identity and authentication in over 90% of Fortune 500 enterprise environments. Attackers who gain an initial unprivileged foothold on an internal workstation rarely exploit zero-days to reach Domain Admin; instead, they abuse built-in Kerberos architecture flaws like **Kerberoasting** and **AS-REP Roasting** to crack service account credentials and compromise domain controllers.\n\n## Theory\nKerberos authentication relies on tickets issued by the Key Distribution Center (KDC):\n1. **TGT (Ticket Granting Ticket):** Issued during initial logon.\n2. **TGS (Ticket Granting Service):** Requested by a domain user when they need to authenticate to a registered service (e.g. MSSQLSvc/sql01.corp.local).\n\n### The Flaw Behind Kerberoasting\nBy Active Directory design, **any authenticated domain user** can request a TGS ticket for any Service Principal Name (SPN) registered in the domain. The KDC encrypts this ticket using the **NTLM hash of the service account**. The requesting user extracts this ticket from memory, exports the hash, and cracks it offline using high-performance GPU rigs without triggering account lockouts on the domain controller.\n\n## Tool Walkthrough with Real Runnable Commands\n\n### 1. Requesting SPN Tickets via Impacket\n```bash\nGetUserSPNs.py corp.local/john.doe:Password123 \\\n  -dc-ip 192.168.56.102 \\\n  -request \\\n  -outputfile kerberoast_hashes.txt\n```\n*Sample Output:*\n```text\n[*] Requesting SPN: MSSQLSvc/sql01.corp.local:1433\n[+] Outputting hash format $krb5tgs$23$* into kerberoast_hashes.txt\n```\n\n### 2. Cracking Tickets with Hashcat Mode 13100\n```bash\nhashcat -m 13100 -a 0 kerberoast_hashes.txt /usr/share/wordlists/rockyou.txt\n```\n*Sample Output:*\n```text\n$krb5tgs$23$...:Summer2026!\n```\n\n### 3. Collecting Domain Graph Data with BloodHound\n```bash\nbloodhound-python -u 'john.doe' -p 'Summer2026!' \\\n  -d corp.local -ns 192.168.56.102 -c All\n```\n\n## Step-by-Step Lab\n1. In your lab terminal, launch `GetUserSPNs.py` against the simulated domain controller.\n2. Verify the saved `$krb5tgs$` ticket in `kerberoast_hashes.txt`.\n3. Execute Hashcat mode 13100 to crack the service account password.\n4. Use the cracked credentials to authenticate via `psexec.py` or `wmiexec.py`.\n\n## Common Mistakes\n- Targeting accounts that use AES-256 Kerberos encryption without ensuring wordlists match complex enterprise passwords.\n- Forgetting to synchronize time between the attacker machine and the Domain Controller (Kerberos rejects tickets if clock skew exceeds 5 minutes).\n\n## Defensive Perspective\nMigrate legacy service accounts to **Group Managed Service Accounts (gMSA)**, which feature automatically generated 128-character passwords cycled every 30 days. For standard service accounts, mandate 25+ character passphrases.\n\n## Homework\n1. Set up a Windows Server 2022 evaluation lab in VirtualBox.\n2. Create an SPN and perform Kerberoasting and AS-REP Roasting against it.\n\n```quiz\n[\n  {\n    \"question\": \"Why can any regular domain user request Kerberos tickets for any SPN in Active Directory?\",\n    \"options\": [\"Because Active Directory is open source\", \"By design, clients must request TGS tickets from the KDC to authenticate to network services\", \"Because Kerberos encryption is obsolete\", \"Due to a bug in Windows 11\"],\n    \"answer\": 1,\n    \"explanation\": \"Kerberos protocol architecture allows any valid domain user to request a ticket for any service so client applications can authenticate.\"\n  },\n  {\n    \"question\": \"Which Hashcat mode (-m) is used to crack Kerberoast TGS-REP tickets?\",\n    \"options\": [\"0\", \"1000\", \"13100\", \"22000\"],\n    \"answer\": 2,\n    \"explanation\": \"Hashcat mode 13100 specifically cracks Kerberos 5 TGS-REP etype 23 hashes.\"\n  },\n  {\n    \"question\": \"What modern Active Directory feature neutralizes Kerberoasting by automatically rotating 128-character passwords?\",\n    \"options\": [\"Group Managed Service Accounts (gMSA)\", \"Windows Defender Firewall\", \"BitLocker\", \"DNSSEC\"],\n    \"answer\": 0,\n    \"explanation\": \"gMSAs use randomized 128-character passwords that are managed and cycled automatically by the domain controller.\"\n  },\n  {\n    \"question\": \"What tool uses graph theory to visualize attack paths to Domain Admin in Active Directory?\",\n    \"options\": [\"Wireshark\", \"BloodHound\", \"John the Ripper\", \"Nikto\"],\n    \"answer\": 1,\n    \"explanation\": \"BloodHound maps enterprise relationship graphs to reveal shortest paths to Domain Admin.\"\n  },\n  {\n    \"question\": \"What is the maximum allowable Kerberos clock skew before authentication requests fail?\",\n    \"options\": [\"1 second\", \"5 minutes\", \"24 hours\", \"Unlimited\"],\n    \"answer\": 1,\n    \"explanation\": \"Standard Kerberos protocol limits clock skew between client and KDC to 5 minutes to prevent replay attacks.\"\n  }\n]\n```",
+    "quiz": [
+      {
+        "question": "Why can any regular domain user request Kerberos tickets for any SPN in Active Directory?",
+        "options": ["Because Active Directory is open source", "By design, clients must request TGS tickets from the KDC to authenticate to network services", "Because Kerberos encryption is obsolete", "Due to a bug in Windows 11"],
+        "answer": 1,
+        "explanation": "Kerberos protocol architecture allows any valid domain user to request a ticket for any service so client applications can authenticate."
+      },
+      {
+        "question": "Which Hashcat mode (-m) is used to crack Kerberoast TGS-REP tickets?",
+        "options": ["0", "1000", "13100", "22000"],
+        "answer": 2,
+        "explanation": "Hashcat mode 13100 specifically cracks Kerberos 5 TGS-REP etype 23 hashes."
+      },
+      {
+        "question": "What modern Active Directory feature neutralizes Kerberoasting by automatically rotating 128-character passwords?",
+        "options": ["Group Managed Service Accounts (gMSA)", "Windows Defender Firewall", "BitLocker", "DNSSEC"],
+        "answer": 0,
+        "explanation": "gMSAs use randomized 128-character passwords that are managed and cycled automatically by the domain controller."
+      },
+      {
+        "question": "What tool uses graph theory to visualize attack paths to Domain Admin in Active Directory?",
+        "options": ["Wireshark", "BloodHound", "John the Ripper", "Nikto"],
+        "answer": 1,
+        "explanation": "BloodHound maps enterprise relationship graphs to reveal shortest paths to Domain Admin."
+      },
+      {
+        "question": "What is the maximum allowable Kerberos clock skew before authentication requests fail?",
+        "options": ["1 second", "5 minutes", "24 hours", "Unlimited"],
+        "answer": 1,
+        "explanation": "Standard Kerberos protocol limits clock skew between client and KDC to 5 minutes to prevent replay attacks."
+      }
+    ]
+  },
+  {
+    "slug": "professional-report-writing",
+    "title": "Professional Reporting: Executive Summaries & Technical PoCs",
+    "module": "Module 21: Professional Reporting",
+    "part": 4,
+    "order": 21,
+    "video_url": "https://www.youtube.com/watch?v=hxXbvu9J5Pg",
+    "lab_image": null,
+    "is_pro": true,
+    "content_md": "> ⚠️ Authorized training environment only — never test systems you don't own or have written permission to test.\n\n## Why It Matters\nClients do not pay $15,000 to $35,000 for you to run exploits in a terminal; they pay for the **written report**. A world-class vulnerability finding with reproducible proofs-of-concept, accurate CVSS 3.1 scoring, and actionable engineering remediation enables organizations to secure their assets. A sloppy, scanner-generated PDF ruins your professional reputation and exposes your consultancy to legal liabilities.\n\n## Theory\nA commercial penetration testing report serves two completely different audiences:\n1. **The Executive Audience (CEO, Board of Directors, Legal Counsel):**\n   - Requires an Executive Summary free of technical terminal jargon.\n   - Translates technical vulnerabilities into **business risk, financial exposure, and regulatory non-compliance (GDPR, PCI-DSS, SOC 2)**.\n   - Visualizes overall security posture with high-level charts.\n2. **The Technical Audience (Software Engineers, DevOps, System Administrators):**\n   - Demands exact, step-by-step reproduction instructions.\n   - Clean, redacted screenshot evidence.\n   - Concrete remediation code snippets rather than generic advice like 'sanitize user input'.\n\n## The Anatomy of an Enterprise Vulnerability Finding\nEvery finding must follow the standard 6-component structure:\n1. **Title & Severity:** Clear naming with CVSS 3.1 Base Score and Vector String.\n2. **Vulnerability Overview:** What the flaw is in plain English.\n3. **Business Impact:** What an attacker achieves (e.g. database compromise, lateral movement).\n4. **Proof of Concept (PoC):** Numbered, step-by-step reproduction instructions with requests and responses.\n5. **Remediation Guidance:** Specific developer and system administrator patches.\n6. **References:** Relevant CWE IDs, OWASP references, and CVE identifiers.\n\n## Tool Walkthrough with Real Runnable Commands\n\n### 1. Generating CVSS 3.1 Vector String\n```text\nCVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H (Score: 9.8 Critical)\n```\n\n### 2. Auditing Markdown Findings\n```bash\ncat << 'EOF' > finding_sample.md\n### [CRITICAL] Remote Code Execution via Insecure File Upload\n- **Affected Asset:** https://app.client.com/profile/upload\n- **CVSS 3.1:** 9.8 (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H)\n- **Status:** Verified Unpatched\nEOF\n```\n\n## Step-by-Step Lab\n1. In your lab terminal, craft a formal finding entry for one vulnerability identified in previous modules.\n2. Calculate the CVSS 3.1 Base Score using standard metrics.\n3. Validate that your reproduction steps can be followed without external guidance.\n\n## Common Mistakes\n- Including unredacted customer PII, credit card numbers, or passwords in report screenshots.\n- Providing vague remediation advice like 'implement robust security practices'.\n- Delivering raw automated scanner exports (e.g. Nessus CSV) as the final client deliverable.\n\n## Defensive Perspective\nOrganizations must establish a structured Vulnerability Management policy that assigns strict Service Level Agreements (SLAs) to findings: Critical (remediated within 48 hours), High (remediated within 14 days), Medium (30 days).\n\n## Homework\n1. Review the sample Rules of Engagement (ROE) document in Appendix D.\n2. Draft a complete 2-page mock penetration testing report based on an exploited lab target.\n\n```quiz\n[\n  {\n    \"question\": \"Who is the primary target audience for the Executive Summary section of a penetration testing report?\",\n    \"options\": [\"Junior developers looking for source code patches\", \"C-suite executives, legal counsel, and board members who evaluate business risk\", \"Automated SIEM parsers\", \"External threat actors\"],\n    \"answer\": 1,\n    \"explanation\": \"The Executive Summary translates technical findings into executive business risks and governance impact.\"\n  },\n  {\n    \"question\": \"Why must sensitive customer data (such as passwords or personal identification) be redacted from report screenshots?\",\n    \"options\": [\"To reduce PDF file size\", \"To comply with privacy laws (GDPR/HIPAA) and prevent the report itself from becoming a data leak risk\", \"Because screenshots cannot display numbers\", \"It is prohibited by Adobe\"],\n    \"answer\": 1,\n    \"explanation\": \"Penetration testing reports are stored across multiple business units; exposing unredacted PII creates severe regulatory liabilities.\"\n  },\n  {\n    \"question\": \"Which CVSS 3.1 severity rating corresponds to a score of 9.8?\",\n    \"options\": [\"Low\", \"Medium\", \"High\", \"Critical\"],\n    \"answer\": 3,\n    \"explanation\": \"CVSS scores from 9.0 to 10.0 are classified as Critical.\"\n  },\n  {\n    \"question\": \"What makes a Proof of Concept (PoC) high quality?\",\n    \"options\": [\"It is over 50 pages long\", \"It contains clear, numbered, reproducible steps that allow a developer to recreate the issue within minutes\", \"It requires proprietary third-party commercial tools to verify\", \"It includes animated GIFs\"],\n    \"answer\": 1,\n    \"explanation\": \"A high-quality PoC provides unambiguous, step-by-step instructions so remediation teams can confirm the flaw and retest the patch.\"\n  },\n  {\n    \"question\": \"What is an Attestation of Assessment?\",\n    \"options\": [\"A legal subpoena\", \"A formal letter from the testing consultancy certifying that an independent security audit was performed on specified dates\", \"A bill of sale for software\", \"An insurance policy\"],\n    \"answer\": 1,\n    \"explanation\": \"An Attestation Letter summarizes the testing engagement dates and scope for third-party compliance audits (e.g., SOC 2, ISO 27001).\"\n  }\n]\n```",
+    "quiz": [
+      {
+        "question": "Who is the primary target audience for the Executive Summary section of a penetration testing report?",
+        "options": ["Junior developers looking for source code patches", "C-suite executives, legal counsel, and board members who evaluate business risk", "Automated SIEM parsers", "External threat actors"],
+        "answer": 1,
+        "explanation": "The Executive Summary translates technical findings into executive business risks and governance impact."
+      },
+      {
+        "question": "Why must sensitive customer data (such as passwords or personal identification) be redacted from report screenshots?",
+        "options": ["To reduce PDF file size", "To comply with privacy laws (GDPR/HIPAA) and prevent the report itself from becoming a data leak risk", "Because screenshots cannot display numbers", "It is prohibited by Adobe"],
+        "answer": 1,
+        "explanation": "Penetration testing reports are stored across multiple business units; exposing unredacted PII creates severe regulatory liabilities."
+      },
+      {
+        "question": "Which CVSS 3.1 severity rating corresponds to a score of 9.8?",
+        "options": ["Low", "Medium", "High", "Critical"],
+        "answer": 3,
+        "explanation": "CVSS scores from 9.0 to 10.0 are classified as Critical."
+      },
+      {
+        "question": "What makes a Proof of Concept (PoC) high quality?",
+        "options": ["It is over 50 pages long", "It contains clear, numbered, reproducible steps that allow a developer to recreate the issue within minutes", "It requires proprietary third-party commercial tools to verify", "It includes animated GIFs"],
+        "answer": 1,
+        "explanation": "A high-quality PoC provides unambiguous, step-by-step instructions so remediation teams can confirm the flaw and retest the patch."
+      },
+      {
+        "question": "What is an Attestation of Assessment?",
+        "options": ["A legal subpoena", "A formal letter from the testing consultancy certifying that an independent security audit was performed on specified dates", "A bill of sale for software", "An insurance policy"],
+        "answer": 1,
+        "explanation": "An Attestation Letter summarizes the testing engagement dates and scope for third-party compliance audits (e.g., SOC 2, ISO 27001)."
+      }
+    ]
+  }
+]

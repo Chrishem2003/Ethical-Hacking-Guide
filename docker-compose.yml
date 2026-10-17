@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hackforge_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hackforge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hackforge_secure_pass_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-hackforge}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hackforge}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hackforge_net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hackforge_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-hackforge}:${POSTGRES_PASSWORD:-hackforge_secure_pass_2026}@postgres:5432/${POSTGRES_DB:-hackforge}
+      SECRET_KEY: ${SECRET_KEY:-hackforge_jwt_super_secret_production_key_2026}
+      ACCESS_TOKEN_EXPIRE_MINUTES: 60
+      REFRESH_TOKEN_EXPIRE_DAYS: 30
+      LEMON_SQUEEZY_WEBHOOK_SECRET: ${LEMON_SQUEEZY_WEBHOOK_SECRET:-demo_secret}
+      DOCKER_HOST: unix:///var/run/docker.sock
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - hackforge_net
+      - hackforge_labs_net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hackforge_web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    networks:
+      - hackforge_net
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  hackforge_net:
+    driver: bridge
+  hackforge_labs_net:
+    driver: bridge
+    internal: true

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Complete Ethical Hacker: Zero to Professional by Chrishem</title>
+    <meta name="description" content="A hands-on, publication-grade interactive e-book and offensive security training suite by Chrishem. Featuring real-world labs, virtual terminal simulator, cheat sheets, and AI mentor." />
+    <meta property="og:title" content="The Complete Ethical Hacker: Zero to Professional by Chrishem" />
+    <meta property="og:description" content="A hands-on, publication-grade interactive e-book and offensive security training suite by Chrishem. Featuring real-world labs, virtual terminal simulator, cheat sheets, and AI mentor." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script>
+      // Suppress Vite HMR WebSocket connection logs in preview iframe per environment constraints
+      window.addEventListener('error', function(e) {
+        if (e && e.message && (e.message.indexOf('WebSocket') !== -1 || e.message.indexOf('createWebSocketModuleRunnerTransport') !== -1)) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      }, true);
+      window.addEventListener('unhandledrejection', function(e) {
+        if (e && e.reason && String(e.reason).indexOf('WebSocket') !== -1) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      }, true);
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-neutral-950 text-neutral-100 antialiased selection:bg-emerald-500/20 selection:text-emerald-300">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
