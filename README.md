@@ -37,12 +37,14 @@ HACKFORGE is a full-stack, hands-on offensive security platform engineered from 
 Run the entire platform (PostgreSQL + FastAPI Backend + React Web Client) with a single command:
 
 ```bash
+cp .env.example .env
+# Edit .env and replace every REPLACE_* value with unique local secrets before starting services.
 docker compose up --build
 ```
 
 - **Frontend Application:** http://localhost:3000
 - **FastAPI Documentation:** http://localhost:8000/docs
-- **PostgreSQL Database:** localhost:5432 (user: `hackforge`, pass: `hackforge_secure_pass_2026`)
+- **PostgreSQL Database:** localhost:5432 (bound to loopback for local development; credentials are private values in `.env`).
 
 ---
 

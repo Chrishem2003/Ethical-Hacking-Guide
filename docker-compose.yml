@@ -1,20 +1,18 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16-alpine
     container_name: hackforge_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-hackforge}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hackforge_secure_pass_2026}
-      POSTGRES_DB: ${POSTGRES_DB:-hackforge}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hackforge}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -31,14 +29,15 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-hackforge}:${POSTGRES_PASSWORD:-hackforge_secure_pass_2026}@postgres:5432/${POSTGRES_DB:-hackforge}
-      SECRET_KEY: ${SECRET_KEY:-hackforge_jwt_super_secret_production_key_2026}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}
+      SECRET_KEY: ${SECRET_KEY:?Set a unique SECRET_KEY in .env}
       ACCESS_TOKEN_EXPIRE_MINUTES: 60
       REFRESH_TOKEN_EXPIRE_DAYS: 30
-      LEMON_SQUEEZY_WEBHOOK_SECRET: ${LEMON_SQUEEZY_WEBHOOK_SECRET:-demo_secret}
+      LEMON_SQUEEZY_WEBHOOK_SECRET: ${LEMON_SQUEEZY_WEBHOOK_SECRET:-}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:3000}
       DOCKER_HOST: unix:///var/run/docker.sock
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - ./backend:/app
       - /var/run/docker.sock:/var/run/docker.sock
@@ -53,7 +52,7 @@ services:
     container_name: hackforge_web
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       - VITE_API_URL=http://localhost:8000
     networks:
