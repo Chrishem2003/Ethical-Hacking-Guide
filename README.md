@@ -37,12 +37,14 @@ HACKFORGE is a full-stack, hands-on offensive security platform engineered from 
 Run the entire platform (PostgreSQL + FastAPI Backend + React Web Client) with a single command:
 
 ```bash
+cp .env.example .env
+# Edit .env and replace every REPLACE_* value with unique local secrets before starting services.
 docker compose up --build
 ```
 
 - **Frontend Application:** http://localhost:3000
 - **FastAPI Documentation:** http://localhost:8000/docs
-- **PostgreSQL Database:** localhost:5432 (user: `hackforge`, pass: `hackforge_secure_pass_2026`)
+- **PostgreSQL Database:** localhost:5432 (bound to loopback for local development; credentials are private values in `.env`).
 
 ---
 
@@ -206,10 +208,10 @@ Follow this exact sequence immediately after cloning the repository to get the p
    ```bash
    npm run dev
    ```
-9. **Log in with Default Seeded Account:**
-   - URL: http://localhost:3000
-   - Email: `student@hackforge.dev`
-   - Password: `hackforge2026` (Has `is_pro = true` pre-activated!)
+9. **Create a local account:**
+    - URL: http://localhost:3000
+    - Register with a unique password or use the configured administrator bootstrap flow.
+    - No shared seeded account is provided; never deploy demo credentials.
 10. **Test Live Terminal & AI Mentor:**
     - Open **Module 7: Nmap Deep Dive**, launch the Lab Terminal, and run `nmap -sC -sV 192.168.56.102`.
     - Open the AI Mentor and ask: *"Explain how Kerberoasting extracts service tickets"*.
